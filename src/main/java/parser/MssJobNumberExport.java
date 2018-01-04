@@ -15,12 +15,14 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 依user表查询MSS表
+ * 依MSS表查询user表
  */
-public class MssExport {
+public class MssJobNumberExport {
     public static final int SIZE = 100;
 
+
     public static void main(String[] args) {
+
         MongoClient mongoClient = new MongoClient("10.127.6.126", 27017);
 
         try {
@@ -41,6 +43,7 @@ public class MssExport {
                     List<Map<String, String>> maps = selects(selects, mongoClient);
                     writer.writeAsCSV(maps, outfile);
                 }
+
                 System.out.println("第" + index + "次，耗时:" + ((System.currentTimeMillis() - start) / 1000) + "秒");
                 index++;
             }
@@ -53,15 +56,15 @@ public class MssExport {
 
     private static List<Map<String, String>> selects(List<String> selects, MongoClient mongoClient) {
         try {
-            MongoDatabase database = mongoClient.getDatabase("repository_d_telecom");
-            MongoCollection<Document> collection = database.getCollection("user");
+            MongoDatabase database = mongoClient.getDatabase("mss_sync_db");
+            MongoCollection<Document> collection = database.getCollection("mSSHRInfomation");
             JsonFlattener flattener = new JsonFlattener();
             BasicDBList values = new BasicDBList();
             values.addAll(selects);
             System.out.println(values.size());
             System.out.println("开始查询");
-            BasicDBObject parobj = new BasicDBObject("loginname", new BasicDBObject("$in", values)).append("is_delete", false);
-            BasicDBObject resultobj = new BasicDBObject("loginname", 1).append("certificate_code", 1).append("ext.name_card.mobile", 1).append("_id", 0);
+            BasicDBObject parobj = new BasicDBObject("jobNumber", new BasicDBObject("$in", values));
+            BasicDBObject resultobj = new BasicDBObject("identityCard", 1).append("jobNumber", 1).append("_id", 0);
             FindIterable<Document> documents = collection.find(parobj).projection(resultobj);
             StringBuffer s = new StringBuffer();
             s.append("[");
@@ -73,14 +76,14 @@ public class MssExport {
             }
             s.append("]");
             List<Map<String, String>> list = flattener.handleAsArray(s.toString());
-            database = mongoClient.getDatabase("mss_sync_db");
-            collection = database.getCollection("mSSHRInfomation");
+            database = mongoClient.getDatabase("repository_d_telecom");
+            collection = database.getCollection("user");
             for (int i = 0; i < list.size(); i++) {
                 Map<String, String> map = list.get(i);
-                String code = map.get("certificate_code");
-                FindIterable<Document> iterable = collection.find(new BasicDBObject("identityCard", code)).projection(new BasicDBObject("identityCard", 1).append("jobNumber", 1).append("_id", 0));
+                String code = map.get("identityCard");
+                FindIterable<Document> iterable = collection.find(new BasicDBObject("certificate_code", code)).projection(new BasicDBObject("loginname", 1).append("certificate_code", 1).append("_id", 0));
                 for (Document document : iterable) {
-                    map.put("jobnumber", (String) document.get("jobNumber"));
+                    map.put("loginname", (String) document.get("loginname"));
                 }
             }
             return list;
