@@ -16,21 +16,19 @@ import java.util.*;
 
 public class ExportMongoinfo {
     //数据库和连接
-    public static final String  DATABASE = "mapping";//"mss_sync_db"
-    public static final String  COLLECTION = "mSSHRInfomation";
+    public static final String  DATABASE = "mss_sync_db";
+    public static final String  COLLECTION = "mSSHRInfomation"; //"mapping""mSSHRInfomation"
 //    public static final String  DATABASE = "repository_d_telecom";
-//    public static final String  COLLECTION = "user";
+//    public static final String  COLLECTION = "authorizeUser";//"user" "authorizeUser"
 
     //查询字段
-    public static final String QUERY = "innerId";//innerId,loginname
-    public static final String QUERY1 = "outterId";//innerId,loginname
-//  经常需要查询的字段  "identityCard";"_id";"innerId";
+    public static final String QUERY = "identityCard";
+    //导出字段
+    public static final int ID = 0;                 //主键_id 0:不导出 1:导出
+    public static final String RESULT = "jobNumber";
     //每次查询$in 数量
     public static final int SIZE= 1000;
-    //导出字段
-    public static final int ID = 0; //主键_id 0:不导出 1:导出
-    public static final String RESULT = "ext.name_card.station";
-//  经常需要导出的字段  "certificate_code";"jobNumber";"outterId";
+    //  经常使用的字段  "loginname""identityCard";"_id";"innerId"; "certificate_code";"jobNumber";"outterId";"certificateCode"
 
     public static void main(String[] args) {
         MongoClient mongoClient = new MongoClient("10.127.6.126", 27017);
@@ -43,10 +41,10 @@ public class ExportMongoinfo {
             List<String> loginnames = readFile("D:\\abc.txt");
             int size = loginnames.size()%SIZE>0?loginnames.size()/SIZE  + 1 : loginnames.size()/SIZE;
             int index = 0;
-//            List<Map<String, String>> maps = new ArrayList<>();
             CSVWriter csvWriter = new CSVWriter();
             System.out.println("一共多少次------"+size);
-            String out = "D:/abc.csv";
+            //导出文件名称
+            String out = "D:/result.csv";
             while (index < size) {
                 long start = System.currentTimeMillis();
                 if (index == size -1 ) {
@@ -74,10 +72,10 @@ public class ExportMongoinfo {
         //查询条件
         BasicDBList values = new BasicDBList();
         values.addAll(loginnames);
-        BasicDBObject obj = new BasicDBObject(QUERY, new BasicDBObject("$in",values));//.append("is_delete",false);
+        BasicDBObject obj = new BasicDBObject(QUERY, new BasicDBObject("$in",values));//.append("status","1").append("is_delete",false);
 //        BasicDBObject obj = new BasicDBObject(QUERY, new BasicDBObject("$in",values));
         //结果集字段
-        BasicDBObject object = new BasicDBObject(QUERY, 1).append(QUERY1,1).append("_id",ID);
+        BasicDBObject object = new BasicDBObject(RESULT, 1).append(QUERY,1).append("jobType",1).append("_id",ID);
         //执行查找
         FindIterable<Document> documents = collection.find(obj).projection(object);
         StringBuffer s = new StringBuffer();
