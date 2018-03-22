@@ -1,0 +1,5 @@
+# json2csv
+mongo获取文档转化json后再写入csv
+mongo没有像Navicat for MySQL 一样可以将数据出到表格的工具，只好自己写个用例了
+mongo里获取的数据格式为document，无法直接存储，需要转化json字符串
+mongo的文档式数据存储没有固定元素长度，转化为的json字符串各不相同，固做此工具类实现Navicat for MySQL的功能。
